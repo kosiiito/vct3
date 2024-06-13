@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  mariadb1:
+    image: mariadb:latest
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: your-root-password
+      MYSQL_DATABASE: your-database-name
+    volumes:
+      - /path/to/mariadb1/data:/var/lib/mysql
+      - /path/to/galera.cnf:/etc/mysql/conf.d/galera.cnf
+      - /path/to/maxscale.cnf:/etc/maxscale.cnf  # MaxScale configuration file
+
+  mariadb2:
+    image: mariadb:latest
+    ports:
+      - "3307:3306"  # Different port to avoid conflict
+    environment:
+      MYSQL_ROOT_PASSWORD: your-root-password
+      MYSQL_DATABASE: your-database-name
+    volumes:
+      - /path/to/mariadb2/data:/var/lib/mysql
+      - /path/to/galera.cnf:/etc/mysql/conf.d/galera.cnf
+      - /path/to/maxscale.cnf:/etc/maxscale.cnf  # MaxScale configuration file
+
+  backend:
+    image: backend:development
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - mariadb1
+      - mariadb2
+      - keycloak
+      - load-balancer
+
+  frontend:
+    image: frontend:development
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+    depends_on:
+      - backend
+      - keycloak
+
+  keycloak:
+    image: jboss/keycloak:latest
+    environment:
+      - KEYCLOAK_USER=admin
+      - KEYCLOAK_PASSWORD=admin
+    ports:
+      - "8080:8080"
+
+  load-balancer:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+      - keycloak

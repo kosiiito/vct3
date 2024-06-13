@@ -1,0 +1,9 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "main": "server.js",
+  "dependencies": {
+    "express": "^4.17.2",
+    "jsonwebtoken": "^8.5.1"
+  }
+}
